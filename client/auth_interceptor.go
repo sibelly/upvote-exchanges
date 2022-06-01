@@ -11,20 +11,20 @@ import (
 
 // AuthInterceptor is a client interceptor for authentication
 type AuthInterceptor struct {
-	authClient *AuthClient
-	// authMethods map[string]bool
+	authClient  *AuthClient
+	authMethods map[string]bool
 	accessToken string
 }
 
 // NewAuthInterceptor returns a new auth interceptor
 func NewAuthInterceptor(
 	authClient *AuthClient,
-	// authMethods map[string]bool,
+	authMethods map[string]bool,
 	refreshDuration time.Duration,
 ) (*AuthInterceptor, error) {
 	interceptor := &AuthInterceptor{
-		authClient: authClient,
-		// authMethods: authMethods,
+		authClient:  authClient,
+		authMethods: authMethods,
 	}
 
 	err := interceptor.scheduleRefreshToken(refreshDuration)
@@ -47,9 +47,9 @@ func (interceptor *AuthInterceptor) Unary() grpc.UnaryClientInterceptor {
 	) error {
 		log.Printf("--> unary interceptor: %s", method)
 
-		// if interceptor.authMethods[method] {
-		// 	return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
-		// }
+		if interceptor.authMethods[method] {
+			return invoker(interceptor.attachToken(ctx), method, req, reply, cc, opts...)
+		}
 
 		return invoker(ctx, method, req, reply, cc, opts...)
 	}
@@ -67,9 +67,9 @@ func (interceptor *AuthInterceptor) Stream() grpc.StreamClientInterceptor {
 	) (grpc.ClientStream, error) {
 		log.Printf("--> stream interceptor: %s", method)
 
-		// if interceptor.authMethods[method] {
-		// 	return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
-		// }
+		if interceptor.authMethods[method] {
+			return streamer(interceptor.attachToken(ctx), desc, cc, method, opts...)
+		}
 
 		return streamer(ctx, desc, cc, method, opts...)
 	}

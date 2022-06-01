@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"flag"
 	"log"
 	"time"
 
@@ -10,16 +9,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-const (
-	defaultName = "world"
-)
-
-var (
-	addr = flag.String("addr", "localhost:50051", "the address to connect to")
-	name = flag.String("name", defaultName, "Name to greet")
-)
-
-// GreeterClient is a client to call helloworld service RPCs
+// server is used to implement helloworld.GreeterServer.
 type GreeterClient struct {
 	service pb.GreeterClient
 }
@@ -30,20 +20,18 @@ func NewGreeterClient(cc *grpc.ClientConn) *GreeterClient {
 	return &GreeterClient{service}
 }
 
-// SayHello calls create helloworld RPC
+// SayHello implements helloworld.GreeterServer
 func (greeterClient *GreeterClient) SayHello(req *pb.HelloRequest) {
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	r, err := greeterClient.service.SayHello(ctx, &pb.HelloRequest{Name: req.Name})
-	if err != nil {
-		log.Fatalf("could not greet: %v", err)
-	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	log.Printf("Received: %v", req.GetName())
 
-	r, err = greeterClient.service.SayHelloAgain(ctx, &pb.HelloRequest{Name: req.Name})
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	res, err := greeterClient.service.SayHello(ctx, req)
+
 	if err != nil {
 		log.Fatalf("could not greet: %v", err)
 	}
-	log.Printf("Greeting: %s", r.GetMessage())
+	log.Printf("Greeting: %s", res.GetMessage())
+
 }
