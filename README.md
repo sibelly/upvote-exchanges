@@ -4,3 +4,10 @@ API with Golang using gRPC with stream pipes that exposes an upvote service endp
 # Generate .pb.go files from proto
 
 ```make gen```
+
+# References
+
+- https://github.com/junereycasuga/gokit-grpc-demo
+- https://levelup.gitconnected.com/working-with-mongodb-using-golang-754ead0c10c
+- http://gokit.io/
+- https://github.dev/purwokertodev/go-ddd-grpc
