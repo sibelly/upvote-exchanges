@@ -11,3 +11,5 @@ API with Golang using gRPC with stream pipes that exposes an upvote service endp
 - https://levelup.gitconnected.com/working-with-mongodb-using-golang-754ead0c10c
 - http://gokit.io/
 - https://github.dev/purwokertodev/go-ddd-grpc
+- https://github.com/go-kit/examples
+- https://github.dev/techschool/pcbook-go
