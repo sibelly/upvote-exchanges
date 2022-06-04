@@ -1,10 +1,9 @@
-package endpoints
+package math
 
 import (
 	"context"
 
 	"github.com/go-kit/kit/endpoint"
-	"github.com/sibelly/upvote-exchanges/service"
 )
 
 // Endpoints struct holds the list of endpoints definition
@@ -27,7 +26,7 @@ type MathResp struct {
 }
 
 // MakeEndpoints func initializes the Endpoint instances
-func MakeEndpoints(s service.Service) Endpoints {
+func MakeEndpoints(s Service) Endpoints {
 	return Endpoints{
 		Add:      makeAddEndpoint(s),
 		Subtract: makeSubtractEndpoint(s),
@@ -36,7 +35,7 @@ func MakeEndpoints(s service.Service) Endpoints {
 	}
 }
 
-func makeAddEndpoint(s service.Service) endpoint.Endpoint {
+func makeAddEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(MathReq)
 		result, _ := s.Add(ctx, req.NumA, req.NumB)
@@ -44,7 +43,7 @@ func makeAddEndpoint(s service.Service) endpoint.Endpoint {
 	}
 }
 
-func makeSubtractEndpoint(s service.Service) endpoint.Endpoint {
+func makeSubtractEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(MathReq)
 		result, _ := s.Subtract(ctx, req.NumA, req.NumB)
@@ -52,7 +51,7 @@ func makeSubtractEndpoint(s service.Service) endpoint.Endpoint {
 	}
 }
 
-func makeMultiplyEndpoint(s service.Service) endpoint.Endpoint {
+func makeMultiplyEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(MathReq)
 		result, _ := s.Multiply(ctx, req.NumA, req.NumB)
@@ -60,7 +59,7 @@ func makeMultiplyEndpoint(s service.Service) endpoint.Endpoint {
 	}
 }
 
-func makeDivideEndpoint(s service.Service) endpoint.Endpoint {
+func makeDivideEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
 		req := request.(MathReq)
 		result, _ := s.Divide(ctx, req.NumA, req.NumB)

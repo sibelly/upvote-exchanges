@@ -1,11 +1,10 @@
-package transport
+package math
 
 import (
 	"context"
 
 	"github.com/go-kit/kit/log"
 	gt "github.com/go-kit/kit/transport/grpc"
-	"github.com/sibelly/upvote-exchanges/endpoints"
 	"github.com/sibelly/upvote-exchanges/pb"
 )
 
@@ -18,7 +17,7 @@ type gRPCServer struct {
 }
 
 // NewGRPCServer initializes a new gRPC server
-func NewGRPCServer(endpoints endpoints.Endpoints, logger log.Logger) pb.MathServiceServer {
+func NewGRPCServer(endpoints Endpoints, logger log.Logger) pb.MathServiceServer {
 	return &gRPCServer{
 		add: gt.NewServer(
 			endpoints.Add,
@@ -77,10 +76,10 @@ func (s *gRPCServer) Divide(ctx context.Context, req *pb.MathRequest) (*pb.MathR
 
 func decodeMathRequest(_ context.Context, request interface{}) (interface{}, error) {
 	req := request.(*pb.MathRequest)
-	return endpoints.MathReq{NumA: req.NumA, NumB: req.NumB}, nil
+	return MathReq{NumA: req.NumA, NumB: req.NumB}, nil
 }
 
 func encodeMathResponse(_ context.Context, response interface{}) (interface{}, error) {
-	resp := response.(endpoints.MathResp)
+	resp := response.(MathResp)
 	return &pb.MathResponse{Result: resp.Result}, nil
 }

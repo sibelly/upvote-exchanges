@@ -12,16 +12,16 @@ import (
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
 	"github.com/sibelly/upvote-exchanges/configs"
-	"github.com/sibelly/upvote-exchanges/endpoints"
 	"github.com/sibelly/upvote-exchanges/pb"
-	"github.com/sibelly/upvote-exchanges/service"
-	transport "github.com/sibelly/upvote-exchanges/transports"
+	"github.com/sibelly/upvote-exchanges/server/exchanges"
+	"github.com/sibelly/upvote-exchanges/server/math"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
 
 var (
-	port = flag.Int("port", 50051, "The server port")
+	port       = flag.Int("port", 50051, "The server port")
+	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of exchanges")
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -34,6 +34,12 @@ func (s *server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloR
 	fmt.Printf("Received: %v", req.GetName())
 	return &pb.HelloReply{Message: "Hello " + req.GetName()}, nil
 }
+
+// func exchangeNewServer() *routeGuideServer {
+// 	s := &routeGuideServer{routeNotes: make(map[string][]*pb.RouteNote)}
+// 	s.loadFeatures(*jsonDBFile)
+// 	return s
+// }
 
 func main() {
 	flag.Parse()
@@ -73,9 +79,13 @@ func main() {
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	addservice := service.NewService(logger)
-	addendpoint := endpoints.MakeEndpoints(addservice)
-	grpcServer := transport.NewGRPCServer(addendpoint, logger)
+	exchangeService := exchanges.NewExchangeService(logger)
+	exchangeEndpoint := exchanges.MakeEndpoints(exchangeService)
+	grpcExchangeServer := exchanges.NewExchangeGRPCServer(exchangeEndpoint, logger)
+
+	mathService := math.NewService(logger)
+	mathEndpoint := math.MakeEndpoints(mathService)
+	grpcMathServer := math.NewGRPCServer(mathEndpoint, logger)
 
 	errs := make(chan error)
 	go func() {
@@ -95,7 +105,10 @@ func main() {
 		// Reflection
 		reflection.Register(baseServer)
 
-		pb.RegisterMathServiceServer(baseServer, grpcServer)
+		pb.RegisterMathServiceServer(baseServer, grpcMathServer)
+
+		pb.RegisterExchangesServiceServer(baseServer, grpcExchangeServer)
+
 		pb.RegisterGreeterServer(baseServer, &server{})
 
 		level.Info(logger).Log("msg", "Server started successfully 🚀")
