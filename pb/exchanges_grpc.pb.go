@@ -23,9 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ExchangesServiceClient interface {
 	Upvote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
-	// rpc CreateExchange(CreateReq) returns (CreateRes) {}
-	// rpc ReadExchange(ReadReq) returns (ReadRes) {}
-	ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListResponse, error)
+	ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangeClient, error)
 }
 
 type exchangesServiceClient struct {
@@ -45,13 +43,36 @@ func (c *exchangesServiceClient) Upvote(ctx context.Context, in *VoteRequest, op
 	return out, nil
 }
 
-func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListResponse, error) {
-	out := new(ListResponse)
-	err := c.cc.Invoke(ctx, "/proto.ExchangesService/ListExchange", in, out, opts...)
+func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExchangesService_ServiceDesc.Streams[0], "/proto.ExchangesService/ListExchange", opts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &exchangesServiceListExchangeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ExchangesService_ListExchangeClient interface {
+	Recv() (*Exchange, error)
+	grpc.ClientStream
+}
+
+type exchangesServiceListExchangeClient struct {
+	grpc.ClientStream
+}
+
+func (x *exchangesServiceListExchangeClient) Recv() (*Exchange, error) {
+	m := new(Exchange)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 // ExchangesServiceServer is the server API for ExchangesService service.
@@ -59,9 +80,7 @@ func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, op
 // for forward compatibility
 type ExchangesServiceServer interface {
 	Upvote(context.Context, *VoteRequest) (*VoteResponse, error)
-	// rpc CreateExchange(CreateReq) returns (CreateRes) {}
-	// rpc ReadExchange(ReadReq) returns (ReadRes) {}
-	ListExchange(context.Context, *Empty) (*ListResponse, error)
+	ListExchange(*Empty, ExchangesService_ListExchangeServer) error
 	mustEmbedUnimplementedExchangesServiceServer()
 }
 
@@ -72,8 +91,8 @@ type UnimplementedExchangesServiceServer struct {
 func (UnimplementedExchangesServiceServer) Upvote(context.Context, *VoteRequest) (*VoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Upvote not implemented")
 }
-func (UnimplementedExchangesServiceServer) ListExchange(context.Context, *Empty) (*ListResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListExchange not implemented")
+func (UnimplementedExchangesServiceServer) ListExchange(*Empty, ExchangesService_ListExchangeServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListExchange not implemented")
 }
 func (UnimplementedExchangesServiceServer) mustEmbedUnimplementedExchangesServiceServer() {}
 
@@ -106,22 +125,25 @@ func _ExchangesService_Upvote_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExchangesService_ListExchange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
-	if err := dec(in); err != nil {
-		return nil, err
+func _ExchangesService_ListExchange_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
 	}
-	if interceptor == nil {
-		return srv.(ExchangesServiceServer).ListExchange(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/proto.ExchangesService/ListExchange",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ExchangesServiceServer).ListExchange(ctx, req.(*Empty))
-	}
-	return interceptor(ctx, in, info, handler)
+	return srv.(ExchangesServiceServer).ListExchange(m, &exchangesServiceListExchangeServer{stream})
+}
+
+type ExchangesService_ListExchangeServer interface {
+	Send(*Exchange) error
+	grpc.ServerStream
+}
+
+type exchangesServiceListExchangeServer struct {
+	grpc.ServerStream
+}
+
+func (x *exchangesServiceListExchangeServer) Send(m *Exchange) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 // ExchangesService_ServiceDesc is the grpc.ServiceDesc for ExchangesService service.
@@ -135,11 +157,13 @@ var ExchangesService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "Upvote",
 			Handler:    _ExchangesService_Upvote_Handler,
 		},
+	},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "ListExchange",
-			Handler:    _ExchangesService_ListExchange_Handler,
+			StreamName:    "ListExchange",
+			Handler:       _ExchangesService_ListExchange_Handler,
+			ServerStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "exchanges.proto",
 }

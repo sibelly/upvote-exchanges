@@ -9,29 +9,26 @@ import (
 	"google.golang.org/grpc"
 )
 
-// server is used to implement helloworld.GreeterServer.
-type GreeterClient struct {
-	service pb.GreeterClient
+type ExchangeClient struct {
+	service pb.ExchangesServiceClient
 }
 
-// NewGreeterClient returns a new helloworld client
-func NewGreeterClient(cc *grpc.ClientConn) *GreeterClient {
-	service := pb.NewGreeterClient(cc)
-	return &GreeterClient{service}
+func NewExchangeClient(cc *grpc.ClientConn) *ExchangeClient {
+	service := pb.NewExchangesServiceClient(cc)
+	return &ExchangeClient{service}
 }
 
-// SayHello implements helloworld.GreeterServer
-func (greeterClient *GreeterClient) SayHello(req *pb.HelloRequest) {
-	log.Printf("Received: %v", req.GetName())
+func (exchangeClient *ExchangeClient) ListExchanges(req *pb.ExchangesServiceClient) {
+	log.Printf("Received: %v", req)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, err := greeterClient.service.SayHello(ctx, req)
+	res, err := exchangeClient.service.ListExchange(ctx, &pb.Empty{})
 
 	if err != nil {
-		log.Fatalf("could not greet: %v", err)
+		log.Fatalf("could not list exchanges: %v", err)
 	}
-	log.Printf("Greeting: %s", res.GetMessage())
+	log.Printf("Exchanges: %s", res)
 
 }

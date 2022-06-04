@@ -25,5 +25,5 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	client.NewGreeterClient(conn)
+	client.NewExchangeClient(conn)
 }

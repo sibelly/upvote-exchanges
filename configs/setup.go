@@ -19,6 +19,11 @@ var clientInstanceError error
 //Used to execute client creation procedure only once.
 var mongoOnce sync.Once
 
+const (
+	DB         = "upvotes"
+	COLLECTION = "exchanges"
+)
+
 //GetMongoClient - Return mongodb connection to work with
 func GetMongoClient() (*mongo.Client, error) {
 	//Perform connection creation operation only once.
@@ -42,7 +47,17 @@ func GetMongoClient() (*mongo.Client, error) {
 }
 
 //getting database collections
-func GetCollection(client *mongo.Client, collectionName string) *mongo.Collection {
-	collection := client.Database("upvotes").Collection(collectionName)
-	return collection
+func GetCollection(collectionName *string) (*mongo.Collection, error) {
+	// Get singleton client
+	client, err := GetMongoClient()
+	if err != nil {
+		return nil, err
+	}
+
+	collection := client.Database(DB).Collection(COLLECTION)
+	if collectionName != nil {
+		collection = client.Database(DB).Collection(*collectionName)
+	}
+
+	return collection, nil
 }

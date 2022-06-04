@@ -13,3 +13,7 @@ API with Golang using gRPC with stream pipes that exposes an upvote service endp
 - https://github.dev/purwokertodev/go-ddd-grpc
 - https://github.com/go-kit/examples
 - https://github.dev/techschool/pcbook-go
+
+- https://github.dev/kainbr3/klever.io_challenge
+- https://github.dev/gabrielfvale/klever-grpc
+- https://github.com/gabrielfvale/klever-grpc

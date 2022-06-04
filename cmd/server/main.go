@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"net"
@@ -11,10 +10,8 @@ import (
 
 	"github.com/go-kit/kit/log"
 	"github.com/go-kit/log/level"
-	"github.com/sibelly/upvote-exchanges/configs"
 	"github.com/sibelly/upvote-exchanges/pb"
 	"github.com/sibelly/upvote-exchanges/server/exchanges"
-	"github.com/sibelly/upvote-exchanges/server/math"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
@@ -24,68 +21,16 @@ var (
 	jsonDBFile = flag.String("json_db_file", "", "A json file containing a list of exchanges")
 )
 
-// server is used to implement helloworld.GreeterServer.
-type server struct {
-	pb.UnimplementedGreeterServer
-}
-
-// SayHello implements helloworld.GreeterServer
-func (s *server) SayHello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
-	fmt.Printf("Received: %v", req.GetName())
-	return &pb.HelloReply{Message: "Hello " + req.GetName()}, nil
-}
-
-// func exchangeNewServer() *routeGuideServer {
-// 	s := &routeGuideServer{routeNotes: make(map[string][]*pb.RouteNote)}
-// 	s.loadFeatures(*jsonDBFile)
-// 	return s
-// }
-
 func main() {
 	flag.Parse()
-	// lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	// if err != nil {
-	// 	log.Fatalf("failed to listen: %v", err)
-	// }
-
-	// grpcServer := grpc.NewServer()
-	// pb.RegisterGreeterServer(grpcServer, &server{})
-
-	// // Reflection
-	// reflection.Register(grpcServer)
-
-	// log.Printf("server listening at %v", lis.Addr())
-	// if err := grpcServer.Serve(lis); err != nil {
-	// 	log.Fatalf("failed to serve: %v", err)
-	// }
-
-	//run database
-	fmt.Printf("Running Databaseee!!!!!!!")
-	client, err := configs.GetMongoClient()
-	if err != nil {
-		fmt.Printf("Errorrrr => %d", err)
-	}
-	//Create a handle to the respective collection in the database.
-	collection := configs.GetCollection(client, "users")
-	//Perform InsertOne operation & validate against the error.
-	_, err = collection.InsertOne(context.TODO(), collection)
-	if err != nil {
-		fmt.Printf("Errorrrr 22 => %d", err)
-	}
-	/////////
 
 	var logger log.Logger
 	logger = log.NewJSONLogger(os.Stdout)
 	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
 	logger = log.With(logger, "caller", log.DefaultCaller)
 
-	exchangeService := exchanges.NewExchangeService(logger)
-	exchangeEndpoint := exchanges.MakeEndpoints(exchangeService)
-	grpcExchangeServer := exchanges.NewExchangeGRPCServer(exchangeEndpoint, logger)
-
-	mathService := math.NewService(logger)
-	mathEndpoint := math.MakeEndpoints(mathService)
-	grpcMathServer := math.NewGRPCServer(mathEndpoint, logger)
+	exchangeService := exchanges.NewExchangeServiceServer()
+	exchangeService.LoadFeatures(*jsonDBFile)
 
 	errs := make(chan error)
 	go func() {
@@ -105,11 +50,7 @@ func main() {
 		// Reflection
 		reflection.Register(baseServer)
 
-		pb.RegisterMathServiceServer(baseServer, grpcMathServer)
-
-		pb.RegisterExchangesServiceServer(baseServer, grpcExchangeServer)
-
-		pb.RegisterGreeterServer(baseServer, &server{})
+		pb.RegisterExchangesServiceServer(baseServer, exchangeService)
 
 		level.Info(logger).Log("msg", "Server started successfully 🚀")
 		baseServer.Serve(grpcListener)

@@ -6,11 +6,7 @@ option go_package = "github.com/sibelly/upvote-exchanges/pb";
 
 service ExchangesService { 
   rpc Upvote(VoteRequest) returns (VoteResponse) {}
-  // rpc Downvote(VoteRequest) returns (VoteResponse) {}
-
-  // rpc CreateExchange(CreateReq) returns (CreateRes) {}
-  // rpc ReadExchange(ReadReq) returns (ReadRes) {}
-  rpc ListExchange(Empty) returns (ListResponse) {}
+  rpc ListExchange(Empty) returns (stream Exchange) {}
 }
 
 message Exchange {
@@ -33,8 +29,4 @@ message VoteResponse {
 }
 
 message Empty {}
-
-message ListResponse {
-  repeated Exchange exchanges = 1;
-}
 
