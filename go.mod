@@ -3,13 +3,11 @@ module github.com/sibelly/upvote-exchanges
 go 1.18
 
 require (
-	github.com/go-kit/log v0.2.0
 	google.golang.org/grpc v1.46.2
 	google.golang.org/protobuf v1.28.0
 )
 
 require (
-	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-stack/stack v1.8.0 // indirect
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
@@ -22,7 +20,6 @@ require (
 )
 
 require (
-	github.com/go-kit/kit v0.12.0
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/joho/godotenv v1.4.0
 	go.mongodb.org/mongo-driver v1.9.1

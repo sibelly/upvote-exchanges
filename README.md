@@ -17,6 +17,13 @@ The uri is going to be defined depending on the way that the mongodb runs on the
 ## Creating mongo container with docker
 ``` docker run -d -p 27017:27017 --name local-mongo mongo:latest ```
 
+## Install go dependencies
+```go get #add dependencies to current module and install them``` 
+
+```go install #compile and install packages and dependencies```
+
+```go mod tidy #add missing and remove unused modules```
+
 ## Generate .pb.go files from proto
 
 ```make gen```
