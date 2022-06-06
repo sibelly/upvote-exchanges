@@ -23,7 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ExchangesServiceClient interface {
 	Upvote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
-	ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangeClient, error)
+	ListExchanges(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangesClient, error)
 }
 
 type exchangesServiceClient struct {
@@ -43,12 +43,12 @@ func (c *exchangesServiceClient) Upvote(ctx context.Context, in *VoteRequest, op
 	return out, nil
 }
 
-func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangeClient, error) {
-	stream, err := c.cc.NewStream(ctx, &ExchangesService_ServiceDesc.Streams[0], "/proto.ExchangesService/ListExchange", opts...)
+func (c *exchangesServiceClient) ListExchanges(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangesClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExchangesService_ServiceDesc.Streams[0], "/proto.ExchangesService/ListExchanges", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &exchangesServiceListExchangeClient{stream}
+	x := &exchangesServiceListExchangesClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -58,16 +58,16 @@ func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, op
 	return x, nil
 }
 
-type ExchangesService_ListExchangeClient interface {
+type ExchangesService_ListExchangesClient interface {
 	Recv() (*Response, error)
 	grpc.ClientStream
 }
 
-type exchangesServiceListExchangeClient struct {
+type exchangesServiceListExchangesClient struct {
 	grpc.ClientStream
 }
 
-func (x *exchangesServiceListExchangeClient) Recv() (*Response, error) {
+func (x *exchangesServiceListExchangesClient) Recv() (*Response, error) {
 	m := new(Response)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (x *exchangesServiceListExchangeClient) Recv() (*Response, error) {
 // for forward compatibility
 type ExchangesServiceServer interface {
 	Upvote(context.Context, *VoteRequest) (*VoteResponse, error)
-	ListExchange(*Empty, ExchangesService_ListExchangeServer) error
+	ListExchanges(*Empty, ExchangesService_ListExchangesServer) error
 	mustEmbedUnimplementedExchangesServiceServer()
 }
 
@@ -91,8 +91,8 @@ type UnimplementedExchangesServiceServer struct {
 func (UnimplementedExchangesServiceServer) Upvote(context.Context, *VoteRequest) (*VoteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Upvote not implemented")
 }
-func (UnimplementedExchangesServiceServer) ListExchange(*Empty, ExchangesService_ListExchangeServer) error {
-	return status.Errorf(codes.Unimplemented, "method ListExchange not implemented")
+func (UnimplementedExchangesServiceServer) ListExchanges(*Empty, ExchangesService_ListExchangesServer) error {
+	return status.Errorf(codes.Unimplemented, "method ListExchanges not implemented")
 }
 func (UnimplementedExchangesServiceServer) mustEmbedUnimplementedExchangesServiceServer() {}
 
@@ -125,24 +125,24 @@ func _ExchangesService_Upvote_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _ExchangesService_ListExchange_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _ExchangesService_ListExchanges_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(ExchangesServiceServer).ListExchange(m, &exchangesServiceListExchangeServer{stream})
+	return srv.(ExchangesServiceServer).ListExchanges(m, &exchangesServiceListExchangesServer{stream})
 }
 
-type ExchangesService_ListExchangeServer interface {
+type ExchangesService_ListExchangesServer interface {
 	Send(*Response) error
 	grpc.ServerStream
 }
 
-type exchangesServiceListExchangeServer struct {
+type exchangesServiceListExchangesServer struct {
 	grpc.ServerStream
 }
 
-func (x *exchangesServiceListExchangeServer) Send(m *Response) error {
+func (x *exchangesServiceListExchangesServer) Send(m *Response) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -160,8 +160,8 @@ var ExchangesService_ServiceDesc = grpc.ServiceDesc{
 	},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ListExchange",
-			Handler:       _ExchangesService_ListExchange_Handler,
+			StreamName:    "ListExchanges",
+			Handler:       _ExchangesService_ListExchanges_Handler,
 			ServerStreams: true,
 		},
 	},

@@ -72,7 +72,7 @@ func (s *ExchangeServiceServer) Upvote(ctx context.Context, in *pb.VoteRequest) 
 }
 
 // ListExchange takes an Empty request, returning a stream of Exchange
-func (s *ExchangeServiceServer) ListExchanges(in *pb.Empty, stream pb.ExchangesService_ListExchangeServer) error {
+func (s *ExchangeServiceServer) ListExchanges(in *pb.Empty, stream pb.ExchangesService_ListExchangesServer) error {
 	log.Print("Received List request")
 	log.Printf("fetch response for id : %d", in.Id)
 

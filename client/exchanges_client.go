@@ -42,7 +42,7 @@ func Upvote(conn *Conn, req *pb.VoteRequest) (res *pb.VoteResponse) {
 
 }
 
-func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExchangeClient) {
+func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExchangesClient) {
 	log.Printf("Received ListExchanges: %v", req)
 
 	service := NewExchangeClient(conn.Cc)
@@ -51,7 +51,7 @@ func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExch
 
 	in := &pb.Empty{Id: 1}
 
-	stream, err := service.ListExchange(ctx, in)
+	stream, err := service.ListExchanges(ctx, in)
 
 	if err != nil {
 		log.Fatalf("open stream error %v", err)
