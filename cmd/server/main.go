@@ -22,6 +22,12 @@ var (
 func main() {
 	flag.Parse()
 
+	// Initialize .env
+	err := configs.LoadEnv()
+	if err != nil {
+		log.Fatalf("Error loading .env file: %v", err)
+	}
+
 	// Connect to MongoDB
 	mongoClient, err := configs.GetMongoClient()
 	if err != nil {

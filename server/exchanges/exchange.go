@@ -63,10 +63,43 @@ func (s *ExchangeServiceServer) Upvote(ctx context.Context, in *pb.VoteRequest) 
 	}
 
 	return &pb.VoteResponse{
-		Name:    readExchange.Name,
-		Website: readExchange.Website,
-		Votes:   readExchange.Upvotes - readExchange.Downvotes,
+		ExchangeId: readExchange.ExchangeId,
+		Name:       readExchange.Name,
+		Website:    readExchange.Website,
+		Votes:      readExchange.Upvotes - readExchange.Downvotes,
 	}, nil
+}
+
+func (s *ExchangeServiceServer) ReadExchange(ctx context.Context, in *pb.ReadReq) (*pb.ReadRes, error) {
+	log.Printf("Received Read request for %v", in.GetExchangeId())
+	item := ExchangeType{}
+
+	// Load collection
+	collectionName := "exchanges"
+	collection, err := configs.GetCollection(&collectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Read exchange of a given exchange_id
+	res := collection.FindOne(context.TODO(), bson.M{"exchange_id": in.GetExchangeId()})
+	if err := res.Decode(&item); err != nil {
+		return nil, status.Error(codes.NotFound, "Could not find Object")
+	}
+
+	log.Printf("Read exchange %s", item.Name)
+
+	response := &pb.ReadRes{
+		Exchange: &pb.Exchange{
+			Id:         item.Id.Hex(),
+			ExchangeId: item.ExchangeId,
+			Name:       item.Name,
+			Upvotes:    item.Upvotes,
+			Downvotes:  item.Downvotes,
+		},
+	}
+
+	return response, nil
 }
 
 // ListExchange takes an Empty request, returning a stream of Exchange
@@ -138,7 +171,7 @@ func (s *ExchangeServiceServer) LoadFeatures(filePath string) {
 var exchangesData = []byte(`[
 {
 	"exchange_id": "OKCOIN_CNY",
-    "website": "https://www.okcoin.cn/",
+    "website": "https://www.okcoin.com/",
     "name": "OKCoin CNY",
 	"upvotes": 3,
 	"downvotes": 8

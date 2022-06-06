@@ -29,7 +29,7 @@ func GetMongoClient() (*mongo.Client, error) {
 	//Perform connection creation operation only once.
 	mongoOnce.Do(func() {
 		// Set client options
-		clientOptions := options.Client().ApplyURI(EnvMongoURI())
+		clientOptions := options.Client().ApplyURI(GetEnvVar("MONGOURI"))
 		// Connect to MongoDB
 		client, err := mongo.Connect(context.TODO(), clientOptions)
 		if err != nil {

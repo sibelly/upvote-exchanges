@@ -49,9 +49,7 @@ func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExch
 
 	ctx := context.TODO()
 
-	in := &pb.Empty{Id: 1}
-
-	stream, err := service.ListExchanges(ctx, in)
+	stream, err := service.ListExchanges(ctx, req)
 
 	if err != nil {
 		log.Fatalf("open stream error %v", err)

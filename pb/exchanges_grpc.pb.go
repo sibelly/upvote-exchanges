@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type ExchangesServiceClient interface {
 	Upvote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
 	ListExchanges(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangesClient, error)
+	ReadExchange(ctx context.Context, in *ReadReq, opts ...grpc.CallOption) (*ReadRes, error)
 }
 
 type exchangesServiceClient struct {
@@ -75,12 +76,22 @@ func (x *exchangesServiceListExchangesClient) Recv() (*Exchange, error) {
 	return m, nil
 }
 
+func (c *exchangesServiceClient) ReadExchange(ctx context.Context, in *ReadReq, opts ...grpc.CallOption) (*ReadRes, error) {
+	out := new(ReadRes)
+	err := c.cc.Invoke(ctx, "/proto.ExchangesService/ReadExchange", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ExchangesServiceServer is the server API for ExchangesService service.
 // All implementations must embed UnimplementedExchangesServiceServer
 // for forward compatibility
 type ExchangesServiceServer interface {
 	Upvote(context.Context, *VoteRequest) (*VoteResponse, error)
 	ListExchanges(*Empty, ExchangesService_ListExchangesServer) error
+	ReadExchange(context.Context, *ReadReq) (*ReadRes, error)
 	mustEmbedUnimplementedExchangesServiceServer()
 }
 
@@ -93,6 +104,9 @@ func (UnimplementedExchangesServiceServer) Upvote(context.Context, *VoteRequest)
 }
 func (UnimplementedExchangesServiceServer) ListExchanges(*Empty, ExchangesService_ListExchangesServer) error {
 	return status.Errorf(codes.Unimplemented, "method ListExchanges not implemented")
+}
+func (UnimplementedExchangesServiceServer) ReadExchange(context.Context, *ReadReq) (*ReadRes, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ReadExchange not implemented")
 }
 func (UnimplementedExchangesServiceServer) mustEmbedUnimplementedExchangesServiceServer() {}
 
@@ -146,6 +160,24 @@ func (x *exchangesServiceListExchangesServer) Send(m *Exchange) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _ExchangesService_ReadExchange_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ReadReq)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ExchangesServiceServer).ReadExchange(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.ExchangesService/ReadExchange",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ExchangesServiceServer).ReadExchange(ctx, req.(*ReadReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ExchangesService_ServiceDesc is the grpc.ServiceDesc for ExchangesService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -156,6 +188,10 @@ var ExchangesService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Upvote",
 			Handler:    _ExchangesService_Upvote_Handler,
+		},
+		{
+			MethodName: "ReadExchange",
+			Handler:    _ExchangesService_ReadExchange_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
