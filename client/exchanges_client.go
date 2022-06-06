@@ -69,7 +69,7 @@ func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExch
 			if err != nil {
 				log.Fatalf("cannot receive %v", err)
 			}
-			log.Printf("Resp received: %s", resp.Result)
+			log.Printf("Resp received: %s", resp)
 		}
 	}()
 

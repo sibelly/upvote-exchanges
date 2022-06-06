@@ -3,10 +3,8 @@ package exchanges
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"log"
-	"sync"
 	"time"
 
 	"github.com/sibelly/upvote-exchanges/configs"
@@ -74,26 +72,39 @@ func (s *ExchangeServiceServer) Upvote(ctx context.Context, in *pb.VoteRequest) 
 // ListExchange takes an Empty request, returning a stream of Exchange
 func (s *ExchangeServiceServer) ListExchanges(in *pb.Empty, stream pb.ExchangesService_ListExchangesServer) error {
 	log.Print("Received List request")
-	log.Printf("fetch response for id : %d", in.Id)
 
-	//use wait group to allow process to be concurrent
-	var wg sync.WaitGroup
-	for i := 0; i < 5; i++ {
-		wg.Add(1)
-		go func(count int64) {
-			defer wg.Done()
-
-			//time sleep to simulate server process time
-			time.Sleep(time.Duration(count) * time.Second)
-			resp := pb.Response{Result: fmt.Sprintf("Request #%d For Id:%d", count, in.Id)}
-			if err := stream.Send(&resp); err != nil {
-				log.Printf("send error %v", err)
-			}
-			log.Printf("finishing request number : %d", count)
-		}(int64(i))
+	// Load collection
+	collectionName := "exchanges"
+	collection, err := configs.GetCollection(&collectionName)
+	if err != nil {
+		return err
 	}
-
-	wg.Wait()
+	// Create Mongo cursor
+	cursor, err := collection.Find(context.TODO(), bson.D{})
+	if err != nil {
+		return status.Errorf(codes.Internal, "Error: %v", err)
+	}
+	defer cursor.Close(context.TODO())
+	// Iterate over cursor entries
+	for cursor.Next(context.TODO()) {
+		item := &ExchangeType{}
+		if err := cursor.Decode(item); err != nil {
+			return status.Errorf(codes.Internal, "Could not decode data: %v", err)
+		}
+		// Add one second to simulate a real scenario streaming
+		time.Sleep(1 * time.Second)
+		stream.Send(&pb.Exchange{
+			ExchangeId: item.ExchangeId,
+			Name:       item.Name,
+			Website:    item.Website,
+			Upvotes:    item.Upvotes,
+			Downvotes:  item.Downvotes,
+		})
+	}
+	// Check for cursor errors
+	if err = cursor.Err(); err != nil {
+		return status.Errorf(codes.Internal, "Error: %v", err)
+	}
 	return nil
 }
 
