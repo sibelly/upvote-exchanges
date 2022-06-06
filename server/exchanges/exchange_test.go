@@ -54,3 +54,29 @@ func TestUpvote(t *testing.T) {
 		t.Error("Failed to upvote exchange", err)
 	}
 }
+
+// // TestList tests listing the stream of exchanges
+// func TestList(t *testing.T) {
+// 	_, err := serviceServer.ListExchanges(context.Background(), &pb.Empty{})
+// 	if err == nil {
+// 		t.Error("Read an invalid exchange")
+// 	}
+
+// 	res, err := serviceServer.ReadExchange(context.Background(), &pb.ReadReq{ExchangeId: "OKCOIN_CNY"})
+// 	if err != nil || res.GetExchange().ExchangeId != "OKCOIN_CNY" {
+// 		t.Error("Could not read exchange")
+// 	}
+// }
+
+// TestRead tests reading an unexisting exchange and an existing one
+func TestRead(t *testing.T) {
+	_, err := serviceServer.ReadExchange(context.Background(), &pb.ReadReq{ExchangeId: "invalid"})
+	if err == nil {
+		t.Error("Read an invalid exchange")
+	}
+
+	res, err := serviceServer.ReadExchange(context.Background(), &pb.ReadReq{ExchangeId: "OKCOIN_CNY"})
+	if err != nil || res.GetExchange().ExchangeId != "OKCOIN_CNY" {
+		t.Error("Could not read exchange")
+	}
+}
