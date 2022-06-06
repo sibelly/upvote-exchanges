@@ -19,9 +19,13 @@ Copy and edit the `.env.example` to `.env`. Set the `MONGOURI` variable to your 
 
 ```make client```
 
+## Testing the server with evans
+More expressive universal gRPC client:
+
+``` https://github.com/ktr0731/evans ```
 
 # Improvements
-- Add User and middleware to authenticate and authorize;
+- Add User and [middleware](https://grpc.io/blog/grpc-web-interceptor/) to authenticate and authorize using the *UnaryInterceptor* and *StreamInterceptor*;
 - Improve the logic to seed the database to execute only once and not repeat the same values;
 - Consume the [coin api](https://www.coinapi.io/) to seed the database;
 
