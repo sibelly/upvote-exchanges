@@ -25,5 +25,9 @@ func main() {
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
-	client.NewExchangeClient(conn)
+
+	client.Upvote(&client.Conn{Cc: conn}, nil)
+
+	client.ListExchanges(&client.Conn{Cc: conn}, nil)
+
 }

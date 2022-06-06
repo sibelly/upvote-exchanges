@@ -1,15 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
+	"log"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/log/level"
+	"github.com/sibelly/upvote-exchanges/configs"
 	"github.com/sibelly/upvote-exchanges/pb"
 	"github.com/sibelly/upvote-exchanges/server/exchanges"
 	"google.golang.org/grpc"
@@ -24,38 +22,33 @@ var (
 func main() {
 	flag.Parse()
 
-	var logger log.Logger
-	logger = log.NewJSONLogger(os.Stdout)
-	logger = log.With(logger, "ts", log.DefaultTimestampUTC)
-	logger = log.With(logger, "caller", log.DefaultCaller)
+	// Connect to MongoDB
+	mongoClient, err := configs.GetMongoClient()
+	if err != nil {
+		log.Fatalf("Could not initialize Mongo client: %v", err)
+	}
+	defer mongoClient.Disconnect(context.TODO())
+
+	// Create listen socket
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
+	if err != nil {
+		log.Fatalf("Could not listen: %v", err)
+	}
+
+	// Create gRPC server
+	server := grpc.NewServer()
+
+	// Reflection
+	reflection.Register(server)
 
 	exchangeService := exchanges.NewExchangeServiceServer()
 	exchangeService.LoadFeatures(*jsonDBFile)
 
-	errs := make(chan error)
-	go func() {
-		c := make(chan os.Signal)
-		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGALRM)
-		errs <- fmt.Errorf("%s", <-c)
-	}()
+	pb.RegisterExchangesServiceServer(server, exchangeService)
+	log.Printf("Listening on %v", lis.Addr())
 
-	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", *port))
-	if err != nil {
-		logger.Log("during", "Listen", "err", err)
-		os.Exit(1)
+	if err := server.Serve(lis); err != nil {
+		log.Fatalf("Could not serve: %v", err)
 	}
-
-	go func() {
-		baseServer := grpc.NewServer()
-		// Reflection
-		reflection.Register(baseServer)
-
-		pb.RegisterExchangesServiceServer(baseServer, exchangeService)
-
-		level.Info(logger).Log("msg", "Server started successfully 🚀")
-		baseServer.Serve(grpcListener)
-	}()
-
-	level.Error(logger).Log("exit", <-errs)
 
 }

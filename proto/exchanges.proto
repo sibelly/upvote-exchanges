@@ -6,7 +6,7 @@ option go_package = "github.com/sibelly/upvote-exchanges/pb";
 
 service ExchangesService { 
   rpc Upvote(VoteRequest) returns (VoteResponse) {}
-  rpc ListExchange(Empty) returns (stream Exchange) {}
+  rpc ListExchange(Empty) returns (stream Response) {}
 }
 
 message Exchange {
@@ -28,5 +28,10 @@ message VoteResponse {
   int32 votes = 3;
 }
 
-message Empty {}
+message Empty {
+  int32 id = 1;
+}
 
+message Response {
+  string result = 1;
+}

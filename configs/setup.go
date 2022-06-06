@@ -50,6 +50,7 @@ func GetMongoClient() (*mongo.Client, error) {
 func GetCollection(collectionName *string) (*mongo.Collection, error) {
 	// Get singleton client
 	client, err := GetMongoClient()
+
 	if err != nil {
 		return nil, err
 	}

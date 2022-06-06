@@ -59,7 +59,7 @@ func (c *exchangesServiceClient) ListExchange(ctx context.Context, in *Empty, op
 }
 
 type ExchangesService_ListExchangeClient interface {
-	Recv() (*Exchange, error)
+	Recv() (*Response, error)
 	grpc.ClientStream
 }
 
@@ -67,8 +67,8 @@ type exchangesServiceListExchangeClient struct {
 	grpc.ClientStream
 }
 
-func (x *exchangesServiceListExchangeClient) Recv() (*Exchange, error) {
-	m := new(Exchange)
+func (x *exchangesServiceListExchangeClient) Recv() (*Response, error) {
+	m := new(Response)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -134,7 +134,7 @@ func _ExchangesService_ListExchange_Handler(srv interface{}, stream grpc.ServerS
 }
 
 type ExchangesService_ListExchangeServer interface {
-	Send(*Exchange) error
+	Send(*Response) error
 	grpc.ServerStream
 }
 
@@ -142,7 +142,7 @@ type exchangesServiceListExchangeServer struct {
 	grpc.ServerStream
 }
 
-func (x *exchangesServiceListExchangeServer) Send(m *Exchange) error {
+func (x *exchangesServiceListExchangeServer) Send(m *Response) error {
 	return x.ServerStream.SendMsg(m)
 }
 

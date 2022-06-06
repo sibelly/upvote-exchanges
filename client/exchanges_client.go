@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"io"
 	"log"
 	"time"
 
@@ -9,8 +10,12 @@ import (
 	"google.golang.org/grpc"
 )
 
+type Conn struct {
+	Cc *grpc.ClientConn
+}
+
 type ExchangeClient struct {
-	service pb.ExchangesServiceClient
+	pb.ExchangesServiceClient
 }
 
 func NewExchangeClient(cc *grpc.ClientConn) *ExchangeClient {
@@ -18,17 +23,59 @@ func NewExchangeClient(cc *grpc.ClientConn) *ExchangeClient {
 	return &ExchangeClient{service}
 }
 
-func (exchangeClient *ExchangeClient) ListExchanges(req *pb.ExchangesServiceClient) {
-	log.Printf("Received: %v", req)
+func Upvote(conn *Conn, req *pb.VoteRequest) (res *pb.VoteResponse) {
+	log.Printf("Received Upvote: %v", req)
+
+	service := NewExchangeClient(conn.Cc)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	res, err := exchangeClient.service.ListExchange(ctx, &pb.Empty{})
+	res, err := service.Upvote(ctx, &pb.VoteRequest{ExchangeId: "HUOBI"})
 
 	if err != nil {
 		log.Fatalf("could not list exchanges: %v", err)
 	}
 	log.Printf("Exchanges: %s", res)
+
+	return res
+
+}
+
+func ListExchanges(conn *Conn, req *pb.Empty) (res *pb.ExchangesService_ListExchangeClient) {
+	log.Printf("Received ListExchanges: %v", req)
+
+	service := NewExchangeClient(conn.Cc)
+
+	ctx := context.TODO()
+
+	in := &pb.Empty{Id: 1}
+
+	stream, err := service.ListExchange(ctx, in)
+
+	if err != nil {
+		log.Fatalf("open stream error %v", err)
+	}
+
+	done := make(chan bool)
+
+	go func() {
+		for {
+			resp, err := stream.Recv()
+			if err == io.EOF {
+				done <- true //means stream is finished
+				return
+			}
+			if err != nil {
+				log.Fatalf("cannot receive %v", err)
+			}
+			log.Printf("Resp received: %s", resp.Result)
+		}
+	}()
+
+	<-done //we will wait until all response is received
+	log.Printf("finished")
+
+	return res
 
 }
