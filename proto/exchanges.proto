@@ -8,6 +8,7 @@ service ExchangesService {
   rpc Upvote(VoteRequest) returns (VoteResponse) {}
   rpc ListExchanges(Empty) returns (stream Exchange) {}
   rpc ReadExchange(ReadReq) returns (ReadRes) {}
+  rpc NotifyUpvote(Empty) returns(stream NotifyMsg) {}
 }
 
 message Exchange {
@@ -39,4 +40,8 @@ message ReadReq {
 
 message ReadRes {
   Exchange exchange = 1;
+}
+
+message NotifyMsg {
+  string message = 1;
 }

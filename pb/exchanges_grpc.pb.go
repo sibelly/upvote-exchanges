@@ -25,6 +25,7 @@ type ExchangesServiceClient interface {
 	Upvote(ctx context.Context, in *VoteRequest, opts ...grpc.CallOption) (*VoteResponse, error)
 	ListExchanges(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_ListExchangesClient, error)
 	ReadExchange(ctx context.Context, in *ReadReq, opts ...grpc.CallOption) (*ReadRes, error)
+	NotifyUpvote(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_NotifyUpvoteClient, error)
 }
 
 type exchangesServiceClient struct {
@@ -85,6 +86,38 @@ func (c *exchangesServiceClient) ReadExchange(ctx context.Context, in *ReadReq, 
 	return out, nil
 }
 
+func (c *exchangesServiceClient) NotifyUpvote(ctx context.Context, in *Empty, opts ...grpc.CallOption) (ExchangesService_NotifyUpvoteClient, error) {
+	stream, err := c.cc.NewStream(ctx, &ExchangesService_ServiceDesc.Streams[1], "/proto.ExchangesService/NotifyUpvote", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &exchangesServiceNotifyUpvoteClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ExchangesService_NotifyUpvoteClient interface {
+	Recv() (*NotifyMsg, error)
+	grpc.ClientStream
+}
+
+type exchangesServiceNotifyUpvoteClient struct {
+	grpc.ClientStream
+}
+
+func (x *exchangesServiceNotifyUpvoteClient) Recv() (*NotifyMsg, error) {
+	m := new(NotifyMsg)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ExchangesServiceServer is the server API for ExchangesService service.
 // All implementations must embed UnimplementedExchangesServiceServer
 // for forward compatibility
@@ -92,6 +125,7 @@ type ExchangesServiceServer interface {
 	Upvote(context.Context, *VoteRequest) (*VoteResponse, error)
 	ListExchanges(*Empty, ExchangesService_ListExchangesServer) error
 	ReadExchange(context.Context, *ReadReq) (*ReadRes, error)
+	NotifyUpvote(*Empty, ExchangesService_NotifyUpvoteServer) error
 	mustEmbedUnimplementedExchangesServiceServer()
 }
 
@@ -107,6 +141,9 @@ func (UnimplementedExchangesServiceServer) ListExchanges(*Empty, ExchangesServic
 }
 func (UnimplementedExchangesServiceServer) ReadExchange(context.Context, *ReadReq) (*ReadRes, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ReadExchange not implemented")
+}
+func (UnimplementedExchangesServiceServer) NotifyUpvote(*Empty, ExchangesService_NotifyUpvoteServer) error {
+	return status.Errorf(codes.Unimplemented, "method NotifyUpvote not implemented")
 }
 func (UnimplementedExchangesServiceServer) mustEmbedUnimplementedExchangesServiceServer() {}
 
@@ -178,6 +215,27 @@ func _ExchangesService_ReadExchange_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ExchangesService_NotifyUpvote_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ExchangesServiceServer).NotifyUpvote(m, &exchangesServiceNotifyUpvoteServer{stream})
+}
+
+type ExchangesService_NotifyUpvoteServer interface {
+	Send(*NotifyMsg) error
+	grpc.ServerStream
+}
+
+type exchangesServiceNotifyUpvoteServer struct {
+	grpc.ServerStream
+}
+
+func (x *exchangesServiceNotifyUpvoteServer) Send(m *NotifyMsg) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // ExchangesService_ServiceDesc is the grpc.ServiceDesc for ExchangesService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -198,6 +256,11 @@ var ExchangesService_ServiceDesc = grpc.ServiceDesc{
 		{
 			StreamName:    "ListExchanges",
 			Handler:       _ExchangesService_ListExchanges_Handler,
+			ServerStreams: true,
+		},
+		{
+			StreamName:    "NotifyUpvote",
+			Handler:       _ExchangesService_NotifyUpvote_Handler,
 			ServerStreams: true,
 		},
 	},

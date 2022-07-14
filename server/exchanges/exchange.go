@@ -11,6 +11,8 @@ import (
 	"github.com/sibelly/upvote-exchanges/pb"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -139,6 +141,49 @@ func (s *ExchangeServiceServer) ListExchanges(in *pb.Empty, stream pb.ExchangesS
 		return status.Errorf(codes.Internal, "Error: %v", err)
 	}
 	return nil
+}
+
+func (s *ExchangeServiceServer) NotifyUpvote(in *pb.Empty, stream pb.ExchangesService_NotifyUpvoteServer) error {
+	log.Print("Received Notify Upvote")
+
+	// Load collection
+	collectionName := "exchanges"
+	collection, err := configs.GetCollection(&collectionName)
+	if err != nil {
+		return err
+	}
+
+	// Set pipeline filter
+	pipeline := mongo.Pipeline{bson.D{{"$match", bson.D{{"operationType", "replace"}}}}}
+	streamOptions := options.ChangeStream().SetFullDocument(options.UpdateLookup)
+
+	// Create a change stream
+	collWatch, err := collection.Watch(context.TODO(), pipeline, streamOptions)
+	if err != nil {
+		return err
+	}
+
+	for collWatch.Next(context.TODO()) {
+		var event bson.M
+		if err := collWatch.Decode(&event); err != nil {
+			return err
+		}
+		output, err := json.MarshalIndent(event["fullDocument"], "", "")
+		if err != nil {
+			return err
+		}
+		log.Printf("Watch mongo: %s\n", output)
+		var exchangeOutput pb.Exchange
+		json.Unmarshal(output, &exchangeOutput)
+		stream.Send(&pb.NotifyMsg{
+			Message: exchangeOutput.Name,
+		})
+	}
+	if err := collWatch.Err(); err != nil {
+		return err
+	}
+
+	return err
 }
 
 // loadFeatures loads features from a JSON file.
